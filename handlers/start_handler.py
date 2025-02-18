@@ -1,17 +1,21 @@
 import asyncio
 import logging
-from db import db
-from storage import *
+from db import User
 from filters import throttle
 from datetime import datetime
 from aiogram import Router, Bot
 from aiogram.types import Message
-from callbacks import __sending_photo
 from setting import load_config, Config
 from buttons import inline_buttons, phone_btn
 from aiogram.filters import StateFilter, CommandStart
 from aiogram.client.default import DefaultBotProperties
 from states import default_state, Start_state, FSMContext
+from storage import (owner_menu_desc, owner_menu, start_user_desc, user_menu, final_phone_desc, start_desc,
+                     start_name_reg, start_birthday_reg, error_name, error_enter_name, attribute_error_name,
+                     base_error_name, errors_birthday, error_dict_birthday, error_y_o, enter_real_date,
+                     value_error_birthday, attribute_error_birthday, base_error_birthday, user_menu_desc, errors_phone,
+                     attribute_error_phone, base_error_phone, alphabet)
+
 
 # --------------------------------- CONFIGURATION ---------------------------------
 
@@ -24,6 +28,8 @@ start_router = Router()
 
 config: Config = load_config()
 
+owner = int(config.tg_owner.token)
+
 logger = logging.getLogger(__name__)
 
 bot = Bot(token=config.tg_bot.token, default=DefaultBotProperties(parse_mode='HTML'))
@@ -35,24 +41,48 @@ bot = Bot(token=config.tg_bot.token, default=DefaultBotProperties(parse_mode='HT
 # Хэндлер реакции на стартовую команду
 @start_router.message(CommandStart(), StateFilter(default_state))
 @throttle(2)
-async def start_command(message: Message, state: FSMContext):
+async def start_command(message: Message, state: FSMContext) -> None:
+    """
+    Реагирует на стартовую команду запуска бота
+
+    Parameters
+    ----------
+    message : Message
+        Значение сообщения для дальнейшей работы
+
+    state : FSMContext
+        Начальное состояние пользователя для дальнейшей обработки
+
+    Returns
+    -------
+    None
+    """
     user_id = message.chat.id
 
     if user_id == owner:
         await message.answer(text=owner_menu_desc, reply_markup=await inline_buttons(buttons_lst=owner_menu))
 
     else:
-        cursor = db.cursor()
-        cursor.execute("SELECT * FROM users WHERE user_id = ?", [user_id])
-        user = cursor.fetchone()
-        cursor.close()
+        try:
+            person = User.get(User.user_id == user_id)
 
-        if user:
-            if user[9]:
-                user_name = user[2]
+            if person.phone:
+                user_name = person.name
 
                 await message.answer(text=start_user_desc.format(user_name),
                                      reply_markup=await inline_buttons(buttons_lst=user_menu))
+
+            elif person.birthday:
+                mess = await message.answer(text=final_phone_desc, disable_notification=True,
+                                            reply_markup=await phone_btn())
+
+                await state.update_data(mess=mess.message_id)
+
+                await state.update_data(flag=1)
+
+                await state.update_data(person=person)
+
+                await state.set_state(state=Start_state.fill_phone)
 
             else:
                 hello = await message.answer(text=start_desc)
@@ -63,9 +93,11 @@ async def start_command(message: Message, state: FSMContext):
 
                 await state.update_data(mess=mess.message_id)
 
+                await state.update_data(flag=0)
+
                 await state.set_state(state=Start_state.fill_name)
 
-        else:
+        except:
             hello = await message.answer(text=start_desc)
 
             await asyncio.sleep(4)
@@ -73,6 +105,8 @@ async def start_command(message: Message, state: FSMContext):
             mess = await hello.edit_text(text=start_name_reg)
 
             await state.update_data(mess=mess.message_id)
+
+            await state.update_data(flag=0)
 
             await state.set_state(state=Start_state.fill_name)
 
@@ -277,8 +311,6 @@ async def registration_phone(message: Message, state: FSMContext) -> None:
 
     data = await state.get_data()
     mess = int(data["mess"])
-    name = data['name']
-    birthday = data['birthday']
 
     keyboard = await phone_btn()
 
@@ -309,19 +341,29 @@ async def registration_phone(message: Message, state: FSMContext) -> None:
             while user_stack_out:
                 user_stack_out.pop(0)
 
-                # ----------------------------
-
-                print(name, birthday, user_reg_phone)
+                flag = int(data["flag"])
 
                 # ----------------------------
 
-                throttled_sending_photo = throttle(0.001)(__sending_photo)
+                if flag == 1:
+                    person = data["person"]
 
-                await throttled_sending_photo(message=message, table_name='base_reg')
+                    person.phone = user_reg_phone
+                    person.save()
+
+                else:
+                    name = data['name']
+                    birthday = data['birthday']
+
+                    user_id = User(user_id=user_id, name=name, birthday=birthday, phone=user_reg_phone,
+                                   date_reg=datetime.now().replace(microsecond=0))
+                    user_id.save()
+
+                # ----------------------------
 
                 await state.clear()
 
-                await asyncio.sleep(5)
+                await asyncio.sleep(3)
 
                 await message.answer(text=user_menu_desc, disable_notification=True,
                                      reply_markup=await inline_buttons(buttons_lst=user_menu))
@@ -338,14 +380,14 @@ async def registration_phone(message: Message, state: FSMContext) -> None:
 
         await state.update_data(mess=mess.message_id)
 
-        await state.set_state(state=Start_state.fill_birthday)
+        await state.set_state(state=Start_state.fill_phone)
 
     except BaseException:
         mess = await message.answer(text=base_error_phone, disable_notification=True, reply_markup=keyboard)
 
         await state.update_data(mess=mess.message_id)
 
-        await state.set_state(state=Start_state.fill_birthday)
+        await state.set_state(state=Start_state.fill_phone)
 
 
 # --------------------------------- VERIFICATION REGISTRATION ---------------------------------

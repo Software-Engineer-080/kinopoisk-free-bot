@@ -10,7 +10,7 @@ last_call_by_user = {}
 
 config: Config = load_config()
 
-bot = Bot(token=config.tg_bot.token, default=DefaultBotProperties(parse_mode='HTML'))
+bot = Bot(token=config.tg_bot.token, default=DefaultBotProperties(parse_mode="HTML"))
 
 
 def throttle(seconds: int) -> Callable:
@@ -22,13 +22,13 @@ def throttle(seconds: int) -> Callable:
             callback_query_id = None
 
             if len(args) > 0:
-                if hasattr(args[0], 'from_user'):
+                if hasattr(args[0], "from_user"):
                     user_id = args[0].from_user.id
 
-                if hasattr(args[0], 'id'):
+                if hasattr(args[0], "id"):
                     callback_query_id = args[0].id
 
-                elif hasattr(args[0], 'message'):
+                elif hasattr(args[0], "message"):
                     user_id = args[0].message.from_user.id
 
             if user_id is None:
@@ -45,7 +45,7 @@ def throttle(seconds: int) -> Callable:
                 try:
                     if callback_query_id:
                         await bot.answer_callback_query(callback_query_id=callback_query_id,
-                                                        text='Подождите 2 секунды❗️')
+                                                        text=f"Подождите {seconds} секунд❗️")
 
                     return
 

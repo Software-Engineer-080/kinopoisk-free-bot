@@ -1,6 +1,11 @@
-from storage import owner
 from aiogram.types import Message
 from aiogram.filters import BaseFilter
+from setting import load_config, Config
+
+
+config: Config = load_config()
+
+owner = int(config.tg_owner.token)
 
 
 class IsOwner(BaseFilter):

@@ -10,7 +10,6 @@ logger = logging.getLogger(__name__)
 
 # Функция создания реплай клавиатуры
 async def buttons(buttons_lst: list, width: int = 3) -> ReplyKeyboardMarkup:
-
     """
     Создаёт текстовую клавиатуру кнопок
 
@@ -27,7 +26,6 @@ async def buttons(buttons_lst: list, width: int = 3) -> ReplyKeyboardMarkup:
     keyboard : ReplyKeyboardMarkup
         Текстовая клавиатура кнопок
     """
-
     repl_list = []
 
     for i in range(0, len(buttons_lst), width):
@@ -49,29 +47,54 @@ async def buttons(buttons_lst: list, width: int = 3) -> ReplyKeyboardMarkup:
     return keyboard
 
 
-async def set_main_menu(bot: Bot):
+# Функция установки меню команд бота
+async def set_main_menu(bot: Bot) -> None:
+    """
+    Создаёт и устанавливает меню команд для телеграмм бота всех пользователей
 
+    Parameters
+    ----------
+    bot : Bot
+        Объект телеграмм бота для оперативной работы с ним
+
+    Returns
+    -------
+    None
+    """
     main_menu_commands = [
 
-        BotCommand(command='/start', description='Запуск бота 🚀'),
+        BotCommand(command="/start", description="Запуск бота 🚀"),
 
-        BotCommand(command='/help', description='Команды бота'),
+        BotCommand(command="/help", description="Команды бота ℹ️"),
 
-        BotCommand(command='/history', description='История запросов'),
+        BotCommand(command="/history", description="История запросов 📜"),
 
-        BotCommand(command='/low', description='Минимальный поиск'),
+        BotCommand(command="/low", description="Фильмы с малым бюджетом ⬇️"),
 
-        BotCommand(command='/high', description='Максимальный поиск')
+        BotCommand(command="/high", description="Фильмы с большим бюджетом ⬆️"),
 
     ]
 
     await bot.set_my_commands(main_menu_commands)
 
 
-async def phone_btn():
+# Функция создания реплай клавиатуры для получения номера телефона
+async def phone_btn() -> ReplyKeyboardMarkup:
+    """
+    Создаёт текстовую клавиатуру кнопки для передачи номера телефона пользователя
+
+    Parameters
+    ----------
+    Не принимает никаких аргументов
+
+    Returns
+    -------
+    key_phone : ReplyKeyboardMarkup
+        Текстовая клавиатура кнопки передачи номера телефона
+    """
     kb_builder = ReplyKeyboardBuilder()
 
-    contact_btn = KeyboardButton(text='Мой номер', request_contact=True)
+    contact_btn = KeyboardButton(text="Мой номер", request_contact=True)
 
     kb_builder.row(contact_btn)
 
