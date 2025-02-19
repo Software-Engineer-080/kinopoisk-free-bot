@@ -835,7 +835,7 @@ async def sending_photo(message: Message, table_name: str, go_class: int, page_n
         film_year = "Нет" if now_see_film["year"] is None else now_see_film["year"]
         film_desc = "Нет" if now_see_film["description"] is None else now_see_film["description"][:100] + "..."
         film_rating = now_see_film["rating"]["imdb"]
-        film_age = "Не известно" if now_see_film["ageRating"] is None else f'{now_see_film["ageRating"]}' + " +"
+        film_age = "Не известно" if now_see_film["ageRating"] is None else now_see_film["ageRating"] + " +"
         poster = now_see_film["poster"]["previewUrl"]
 
         if table_name == "money":
