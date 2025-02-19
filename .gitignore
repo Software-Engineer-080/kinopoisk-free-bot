@@ -1,3 +1,14 @@
 /setting/.env
 .idea
 /.venv/
+.DS_Store
+/buttons/.DS_Store
+/callbacks/.DS_Store
+/db/.DS_Store
+/filters/.DS_Store
+/handlers/.DS_Store
+/images/.DS_Store
+/loggers/.DS_Store
+/setting/.DS_Store
+/states/.DS_Store
+/storage/.DS_Store
